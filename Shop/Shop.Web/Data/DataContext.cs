@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Shop.Web.Data
-{
+{                               //este trabaja con mi modelo de user
     public class DataContext : IdentityDbContext<User>
     {
 

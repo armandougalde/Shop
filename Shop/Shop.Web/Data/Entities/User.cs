@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shop.Web.Data.Entities
 {
-    public class User:IdentityUser
+    public class User : IdentityUser
     {
         public string FirstName { get; set; }
 
