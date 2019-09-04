@@ -36,6 +36,7 @@ namespace Shop.Web.Data
                     LastName = "Ugalde",
                     Email = "armandougalde@gmail.com",
                     UserName = "armandougalde"
+                    
                    
                 };
 
