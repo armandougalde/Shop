@@ -7,33 +7,36 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Shop.Web.Data;
 using Shop.Web.Data.Entities;
+using Shop.Web.Helpers;
 
 namespace Shop.Web.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly IRepository repository;
+        private readonly IProductRepository repository;
+        private readonly IUserHelper userHelper;
 
-        public ProductsController(IRepository repository)
+        public ProductsController(IProductRepository repository, IUserHelper userHelper)
         {
             this.repository = repository;
+            this.userHelper = userHelper;
         }
 
         // GET: Products
         public IActionResult Index()
         {
-            return View(this.repository.GetProducts());
+            return View(this.repository.GetAll());
         }
 
         // GET: Products/Details/5
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = this.repository.GetProduct(id.Value);
+            var product = await this.repository.GetByIdSync(id.Value);
                 
             if (product == null)
             {
@@ -57,22 +60,23 @@ namespace Shop.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                this.repository.AddProduct(product);
-                await this.repository.SaveAllAsync();
+                //TODO: Change logged user
+                product.User= await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
+               await this.repository.CreateAsync(product);                
                 return RedirectToAction(nameof(Index));
             }
             return View(product);
         }
 
         // GET: Products/Edit/5
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = this.repository.GetProduct(id.Value);            
+            var product = await this.repository.GetByIdSync(id.Value);            
             
                 if (product == null)
             {
@@ -82,8 +86,7 @@ namespace Shop.Web.Controllers
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,  Product product)
@@ -97,12 +100,14 @@ namespace Shop.Web.Controllers
             {
                 try
                 {
-                    this.repository.UpdateProduct(product);
-                    await this.repository.SaveAllAsync();
+                    //TODO: Change logged user
+                    product.User = await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
+                    await this.repository.UpdateAsync(product);
+                    
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!await ProductExists(product.Id))
                     {
                         return NotFound();
                     }
@@ -117,14 +122,14 @@ namespace Shop.Web.Controllers
         }
 
         // GET: Products/Delete/5
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = this.repository.GetProduct(id.Value);
+            var product = await this.repository.GetByIdSync(id.Value);
                 
             if (product == null)
             {
@@ -139,16 +144,16 @@ namespace Shop.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = this.repository.GetProduct(id);
+            var product = await this.repository.GetByIdSync(id);
 
-            this.repository.Remove(product);
-            await this.repository.SaveAllAsync();
+            await this.repository.DeleteAsync(product);
+            
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ProductExists(int id)
+        private async Task<bool> ProductExists(int id)
         {
-            return this.repository.ProductExist(id);
+            return await this.repository.ExistAsyc(id);
         }
     }
 }
