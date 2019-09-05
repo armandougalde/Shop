@@ -38,5 +38,24 @@ namespace Shop.Web.Data.Entities
 
         public User User { get; set; }
 
+        public string ImageFullPath {
+
+
+
+            get {
+
+                if (string.IsNullOrEmpty(this.ImageUrl))
+                {
+                    return null;
+                }
+                else {
+
+                    return $"https://localhost:44380{this.ImageUrl.Substring(1)}";
+                }
+            }
+
+
+
+        }
     }
 }

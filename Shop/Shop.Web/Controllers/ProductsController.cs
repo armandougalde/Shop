@@ -15,19 +15,19 @@ namespace Shop.Web.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly IProductRepository repository;
+        private readonly IProductRepository productRepository;
         private readonly IUserHelper userHelper;
 
-        public ProductsController(IProductRepository repository, IUserHelper userHelper)
+        public ProductsController(IProductRepository productRepository, IUserHelper userHelper)
         {
-            this.repository = repository;
+            this.productRepository = productRepository;
             this.userHelper = userHelper;
         }
 
         // GET: Products
         public IActionResult Index()
         {
-            return View(this.repository.GetAll());
+            return View(this.productRepository.GetAll().OrderBy(p => p.Name));
         }
 
         // GET: Products/Details/5
@@ -38,7 +38,7 @@ namespace Shop.Web.Controllers
                 return NotFound();
             }
 
-            var product = await this.repository.GetByIdSync(id.Value);
+            var product = await this.productRepository.GetByIdSync(id.Value);
                 
             if (product == null)
             {
@@ -56,8 +56,7 @@ namespace Shop.Web.Controllers
 
         // POST: Products/Create
         
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost]       
         public async Task<IActionResult> Create( ProductViewModel view)
         {
             if (ModelState.IsValid)
@@ -67,7 +66,7 @@ namespace Shop.Web.Controllers
                 if (view.ImageFile != null && view.ImageFile.Length > 0)
                 {
                     path = Path.Combine(Directory.GetCurrentDirectory(),
-                        "D:Sites\\Shop\\Shop.Web\\wwwroot\\images\\Products", 
+                        "wwwroot\\images\\Products", 
                         view.ImageFile.FileName);
 
                     using (var stream = new FileStream(path, FileMode.Create))
@@ -84,7 +83,7 @@ namespace Shop.Web.Controllers
                 
                 //TODO: Change logged user
                 product.User= await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
-               await this.repository.CreateAsync(view);                
+               await this.productRepository.CreateAsync(product);                
                 return RedirectToAction(nameof(Index));
             }
             return View(view);
@@ -115,38 +114,69 @@ namespace Shop.Web.Controllers
                 return NotFound();
             }
 
-            var product = await this.repository.GetByIdSync(id.Value);            
+            var product = await this.productRepository.GetByIdSync(id.Value);            
             
                 if (product == null)
             {
                 return NotFound();
             }
-            return View(product);
+
+            var view = this.ToProductViewModel(product);
+            return View(view);
+        }
+
+        private ProductViewModel ToProductViewModel(Product product)
+        {
+            return new ProductViewModel
+            {
+                Id = product.Id,
+                ImageUrl = product.ImageUrl,
+                IsAvailabe = product.IsAvailabe,
+                LastPurchase = product.LastPurchase,
+                LastSale = product.LastSale,
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock,
+                User = product.User
+
+            };
         }
 
         // POST: Products/Edit/5
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id,  Product product)
+        public async Task<IActionResult> Edit(ProductViewModel view)
         {
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
+        
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var path = view.ImageUrl;
+                    if (view.ImageFile != null && view.ImageFile.Length > 0)
+                    {
+                        path = Path.Combine(Directory.GetCurrentDirectory(),
+                            "wwwroot\\images\\Products",
+                            view.ImageFile.FileName);
+
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await view.ImageFile.CopyToAsync(stream);
+                        }
+
+                        path = $"~/images/Products/{view.ImageFile.FileName}";
+                    }
+                    var product = this.ToProduct(view, path);
                     //TODO: Change logged user
-                    product.User = await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
-                    await this.repository.UpdateAsync(product);
+                    view.User = await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
+                    await this.productRepository.UpdateAsync(view);
                     
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await ProductExists(product.Id))
+                    if (!await ProductExists(view.Id))
                     {
                         return NotFound();
                     }
@@ -157,7 +187,7 @@ namespace Shop.Web.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            return View(view);
         }
 
         // GET: Products/Delete/5
@@ -168,7 +198,7 @@ namespace Shop.Web.Controllers
                 return NotFound();
             }
 
-            var product = await this.repository.GetByIdSync(id.Value);
+            var product = await this.productRepository.GetByIdSync(id.Value);
                 
             if (product == null)
             {
@@ -183,16 +213,16 @@ namespace Shop.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await this.repository.GetByIdSync(id);
+            var product = await this.productRepository.GetByIdSync(id);
 
-            await this.repository.DeleteAsync(product);
+            await this.productRepository.DeleteAsync(product);
             
             return RedirectToAction(nameof(Index));
         }
 
         private async Task<bool> ProductExists(int id)
         {
-            return await this.repository.ExistAsyc(id);
+            return await this.productRepository.ExistAsyc(id);
         }
     }
 }
