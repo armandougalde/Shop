@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Shop.Web.Data;
 using Shop.Web.Data.Entities;
 using Shop.Web.Helpers;
 using Shop.Web.Models;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Shop.Web.Controllers
 {
+   
+
     public class ProductsController : Controller
     {
         private readonly IProductRepository productRepository;
@@ -24,6 +24,7 @@ namespace Shop.Web.Controllers
             this.userHelper = userHelper;
         }
 
+        
         // GET: Products
         public IActionResult Index()
         {
@@ -39,7 +40,7 @@ namespace Shop.Web.Controllers
             }
 
             var product = await this.productRepository.GetByIdSync(id.Value);
-                
+
             if (product == null)
             {
                 return NotFound();
@@ -48,6 +49,7 @@ namespace Shop.Web.Controllers
             return View(product);
         }
 
+        [Authorize(Roles ="admin")]
         // GET: Products/Create
         public IActionResult Create()
         {
@@ -55,9 +57,9 @@ namespace Shop.Web.Controllers
         }
 
         // POST: Products/Create
-        
-        [HttpPost]       
-        public async Task<IActionResult> Create( ProductViewModel view)
+
+        [HttpPost]
+        public async Task<IActionResult> Create(ProductViewModel view)
         {
             if (ModelState.IsValid)
             {
@@ -66,7 +68,7 @@ namespace Shop.Web.Controllers
                 if (view.ImageFile != null && view.ImageFile.Length > 0)
                 {
                     path = Path.Combine(Directory.GetCurrentDirectory(),
-                        "wwwroot\\images\\Products", 
+                        "wwwroot\\images\\Products",
                         view.ImageFile.FileName);
 
                     using (var stream = new FileStream(path, FileMode.Create))
@@ -77,13 +79,10 @@ namespace Shop.Web.Controllers
                     path = $"~/images/Products/{view.ImageFile.FileName}";
                 }
                 var product = this.ToProduct(view, path);
-                
-                
-                
-                
-                //TODO: Change logged user
-                product.User= await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
-               await this.productRepository.CreateAsync(product);                
+
+                                               
+                product.User = await this.userHelper.GetUserByEmailAsync(this.User.Identity.Name);
+                await this.productRepository.CreateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
             return View(view);
@@ -106,7 +105,9 @@ namespace Shop.Web.Controllers
             };
         }
 
+
         // GET: Products/Edit/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -114,9 +115,9 @@ namespace Shop.Web.Controllers
                 return NotFound();
             }
 
-            var product = await this.productRepository.GetByIdSync(id.Value);            
-            
-                if (product == null)
+            var product = await this.productRepository.GetByIdSync(id.Value);
+
+            if (product == null)
             {
                 return NotFound();
             }
@@ -148,7 +149,7 @@ namespace Shop.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProductViewModel view)
         {
-        
+
 
             if (ModelState.IsValid)
             {
@@ -170,9 +171,9 @@ namespace Shop.Web.Controllers
                     }
                     var product = this.ToProduct(view, path);
                     //TODO: Change logged user
-                    view.User = await this.userHelper.GetUserByEmailAsync("armandougalde@gmail.com");
+                    view.User = await this.userHelper.GetUserByEmailAsync(this.User.Identity.Name);
                     await this.productRepository.UpdateAsync(view);
-                    
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -191,6 +192,7 @@ namespace Shop.Web.Controllers
         }
 
         // GET: Products/Delete/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -199,7 +201,7 @@ namespace Shop.Web.Controllers
             }
 
             var product = await this.productRepository.GetByIdSync(id.Value);
-                
+
             if (product == null)
             {
                 return NotFound();
@@ -216,7 +218,7 @@ namespace Shop.Web.Controllers
             var product = await this.productRepository.GetByIdSync(id);
 
             await this.productRepository.DeleteAsync(product);
-            
+
             return RedirectToAction(nameof(Index));
         }
 

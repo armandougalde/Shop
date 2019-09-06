@@ -45,7 +45,15 @@ namespace Shop.Web.Data
                 {
                     throw new InvalidOperationException("Could not create the user in seeder");
                 }
+                await this.userHelper.AddUserToRoleAsync(user, "Admin");
             }
+
+            var isInRole = await this.userHelper.IsUserInRoleAsync(user, "Admin");
+            if (!isInRole)
+            {
+                await this.userHelper.AddUserToRoleAsync(user, "Admin");
+            }
+
 
             if (!this.context.Products.Any())
             {
