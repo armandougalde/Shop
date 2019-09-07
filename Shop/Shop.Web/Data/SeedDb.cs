@@ -63,7 +63,7 @@ namespace Shop.Web.Data
                 await this.context.SaveChangesAsync();
             }
         }
-
+        //ff
         private void AddProduct(string name, User user)
         {
             this.context.Products.Add(new Product

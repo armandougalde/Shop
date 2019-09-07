@@ -25,8 +25,11 @@ namespace Shop.Web.Helpers
 
         Task AddUserToRoleAsync(User user, string roleName);
 
+        //ss
         Task<bool> IsUserInRoleAsync(User user, string roleName);
+
         Task GenerateEmailConfirmationTokenAsync(User user);
+
         Task ConfirmEmailAsync(User user, object token);
     }
 }

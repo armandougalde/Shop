@@ -31,7 +31,7 @@ namespace Shop.Web.Controllers
             return View(this.productRepository.GetAll().OrderBy(p => p.Name));
         }
 
-        // GET: Products/Details/5
+        // GET: Products/Details/5s
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)

@@ -19,7 +19,7 @@ namespace Shop.Web.Controllers
         {
             return View();
         }
-
+        //sdsdsd
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

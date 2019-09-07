@@ -19,7 +19,7 @@ namespace Shop.Web.Controllers
         private readonly IUserHelper userHelper;
         private readonly IConfiguration configuration;
 
-        public AccountController(IUserHelper userHelper,IConfiguration configuration)
+        public AccountController(IUserHelper userHelper, IConfiguration configuration)
         {
             this.userHelper = userHelper;
             this.configuration = configuration;
@@ -42,7 +42,7 @@ namespace Shop.Web.Controllers
             await this.userHelper.LogoutAsync();
             return this.RedirectToAction("Index", "Home");
         }
-
+        //sss
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -225,7 +225,7 @@ namespace Shop.Web.Controllers
                             this.configuration["Tokens:Issuer"],
                             this.configuration["Tokens:Audience"],
                             claims,
-                            expires: DateTime.UtcNow.AddMinutes(5),
+                            expires: DateTime.UtcNow.AddDays(5),
                             signingCredentials: credentials);
                         var results = new
                         {
